@@ -688,10 +688,17 @@ class TCPDF_PARSER {
 		$offset += strlen($objref);
 		// get array of object content
 		$objdata = array();
+		$loop_error = false;
 		$i = 0; // object main index
 		do {
 			// get element
 			$element = $this->getRawObject($offset);
+
+			if ($element[2] == $offset) {
+				$loop_error = true;
+				break;
+			}
+
 			$offset = $element[2];
 			// decode stream using stream's dictionary information
 			if ($decoding AND ($element[0] == 'stream') AND (isset($objdata[($i - 1)][0])) AND ($objdata[($i - 1)][0] == '<<')) {
@@ -700,8 +707,12 @@ class TCPDF_PARSER {
 			$objdata[$i] = $element;
 			++$i;
 		} while ($element[0] != 'endobj');
-		// remove closing delimiter
-		array_pop($objdata);
+
+		if (!$loop_error) {
+			// remove closing delimiter
+			array_pop($objdata);
+		}
+
 		// return raw object content
 		return $objdata;
 	}
